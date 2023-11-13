@@ -1,10 +1,11 @@
 // Write your helper functions here!
 
-require('cross-fetch/polyfill');
+// require('cross-fetch/polyfill');
+// require('isomorphic-fetch');
 
 function addDestinationInfo(document, name, diameter, star, distance, moons, imageUrl) {
     // Here is the HTML formatting for our mission target div.
-    let targetMission = document.getElementById('targetMission');
+    let targetMission = document.getElementById('missionTarget');
     targetMission.innerHTML =`<h2>Mission Destination</h2>
                  <ol>
                      <li>Name:${name} </li>
@@ -13,7 +14,7 @@ function addDestinationInfo(document, name, diameter, star, distance, moons, ima
                      <li>Distance from Earth:${distance} </li>
                      <li>Number of Moons:${moons} </li>
                  </ol>
-                 <img src="${image}">`
+                 <img src="${imageUrl}">`
     
                  
    
@@ -28,63 +29,81 @@ function addDestinationInfo(document, name, diameter, star, distance, moons, ima
  };
  
  function formSubmission(document, list, pilot, copilot, fuelLevel, cargoLevel) {
-    pilot = document.getElementById('pilotName');
-    copilot = document.querySelector('input[name=copilotName]');
-     list = document.getElementById('faultyItems');
-    fuelLevel = document.querySelector('input[name=fuelLevel]')
-    cargoLevel = document.querySelector('input[name=cargoMass]');
-    let li = document.querySelector('ol');
+         
+    let faultyItems = document.getElementById('faultyItems');
+    let fuelStatus = document.getElementById('fuelStatus');
+    let cargoStatus = document.getElementById('cargoStatus');
     let h2 = document.getElementById('launchStatus');
+    let pilotStatus = document.getElementById('pilotStatus');
+    let copilotStatus = document.getElementById('copilotStatus');
 
-    let button = document.getElementById('formSubmit');
-
-    button.addEventListener('submit', function(event){
-    event.preventDefault();
-    const validatePilot = validateInput(pilot.value);
-    const validateCopilot = validateInput(copilot.value);
-    const validateFuel =validateInput(fuelLevel.value);
-    const validateCargo = validateInput(cargoLevel.value);
-    
+  
+    const validatePilot = validateInput(pilot);
+    console.log(validatePilot)
+    const validateCopilot = validateInput(copilot);
+    console.log(validateCopilot)
+    const validateFuel =validateInput(fuelLevel);
+    console.log(validateFuel);
+    const validateCargo = validateInput(cargoLevel);
+    console.log(validateCargo)
     if (validatePilot ==='Empty' || validateCopilot === 'Empty' || validateFuel === "Empty" || validateCargo === 'Empty') {
         alert('All fields are required');
+    };
+    if(validateCargo !== 'Is a Number' || validateFuel !== 'Is a Number'){
+         alert('Make sure to enter valid data type!');
+         return
     }
-    if(validateFuel === 'Is a Number' && fuelLevel.value < 10000){
-        list.style.visibility ='visible';
-        h2.innerText = 'Shuttle not ready for launch';
+    //maybe another validation?
+    if(validatePilot ==='Is a Number' || validateCopilot ==='Is a Number'){
+        alert('Make sure to enter valid data type!')
+        return;
+    }
+    if(validateFuel === 'Is a Number' && fuelLevel < 10000){
+        faultyItems.style.visibility ='visible';
+        h2.innerHTML = 'Shuttle Not Ready for Launch';
         h2.style.color ='red';
-        li.innerHTML = `<li id="pilotStatus" data-testid="pilotStatus">Pilot ${pilot.value} is Ready</li>
-        <li id="copilotStatus" data-testid="copilotStatus">Copilot ${copilot.value} is Ready</li>
-        <li id="fuelStatus" data-testid="fuelStatus">Fuel level too low for launch</li>
-        <li id="cargoStatus" data-testid="cargoStatus">Cargo mass low enough for launch</li>` 
-    } else if (validateCargo === 'Is a Number' && cargoLevel.value < 10000){
-        list.style.visibility = 'visible';
-        h2.innerText = 'Shuttle not ready for launch';
+        pilotStatus.innerHTML =`Pilot ${pilot} is ready for launch`
+        copilotStatus.innerHTML =`Co-pilot ${copilot} is ready for launch`
+        fuelStatus.innerHTML = 'Fuel level too low for launch';
+        
+         
+    } else if (validateCargo === 'Is a Number' && cargoLevel > 10000){ // onlycargostatus
+        faultyItems.style.visibility = 'visible';
+        h2.innerHTML = 'Shuttle Not Ready for Launch';
         h2.style.color ='red';
-        li.innerHTML = `<li id="pilotStatus" data-testid="pilotStatus">Pilot ${pilot.value} is Ready</li>
-        <li id="copilotStatus" data-testid="copilotStatus">Copilot ${copilot.value} is Ready</li>
-        <li id="fuelStatus" data-testid="fuelStatus">Fuel level high enough for launch</li>
-        <li id="cargoStatus" data-testid="cargoStatus">Cargo mass too heavy for launch</li>` 
-    } else {list.style.visibility ='hidden';
+        pilotStatus.innerHTML =`Pilot ${pilot} is ready for launch`
+        copilotStatus.innerHTML =`Co-pilot ${copilot} is ready for launch`
+        cargoStatus.innerHTML = 'Cargo mass too heavy for launch';
+        fuelStatus.innerHTML='Fuel level high enough for launch';
+    } else if(Number(cargoLevel) <=10000 && Number(fuelLevel) >= 10000) {
+            faultyItems.style.visibility ='visible';
             h2.style.color = 'green';
-            h2.innerText = 'Shuttle is ready for launch';}
-    });
-
+            pilotStatus.innerHTML =`Pilot ${pilot} is ready for launch`
+            copilotStatus.innerHTML =`Co-pilot ${copilot} is ready for launch`
+            fuelStatus.innerHTML ='Fuel level high enough for launch '
+            cargoStatus.innerHTML='Cargo mass low enough for launch'
+            h2.innerHTML = 'Shuttle is Ready for Launch'
+            
+            }
+    
+    
  }
  
  async function myFetch() {
      let planetsReturned;
  
-     planetsReturned = await fetch('https://handlers.education.launchcode.org/static/planets.json').then( function(response) {
-        response.json().then(function(json){
-           
-        }) 
-    });
+     planetsReturned = await fetch('https://handlers.education.launchcode.org/static/planets.json')
+       planetsReturned = await planetsReturned.json();
+        console.log(planetsReturned)
+        
+    
  
      return planetsReturned;
  }
  
  function pickPlanet(planets) {
-let index = Math.ceil(Math.random() * planets.length)
+let index = Math.ceil(Math.random() * planets.length-1)
+// console.log(index)
 return planets[index];
  }
  
